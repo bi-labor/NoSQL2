@@ -438,7 +438,7 @@ chatController.login = function () {
     alert('Kérlek add meg az összes adatot!');
   } else {
     myUsername = _.escape(usernameInput.value);
-    chatService.connect(usernameInput.value, serverInput.value, function () {
+    chatService.connect(myUsername, serverInput.value, function () {
         //Sikeres csatlakozás esetén
         // Screen-t váltunk (szegényember SPA-ja)
         document.getElementById('login-window').style.display = 'none';
