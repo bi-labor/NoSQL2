@@ -184,14 +184,29 @@ a szokásos web-es technológiákkal elkészíthető, majd becsomagolva a futtat
 alkalmazás. Hasznos kiegészítés, hogy elérhető benne a Developer Tools, használjuk bátran hibakezelésre, debug-olásra.
 
 ## 2. Előkészítés
-A függőségek (Electron, Redis és MongoDB driverek stb.) telepítésére a Node Package Manager-t fogjuk használni.
-Töltsük le és telepítsük az [NPM](https://nodejs.org/en/download/) alkalmazást.
+**Ez a labor saját gépen (Docker alapú vagy Docker nélküli), illetve virtuális gépen (Docker nélküli) is megoldható!**
+
+### 2.1. Docker nélküli környezet
+
+Docker helyett használható a [Redis](https://redis.io/download)/[Redis on Windows](https://github.com/microsoftarchive/redis/releases/tag/win-3.0.504) és [MongoDB](https://www.mongodb.com/try/download/community) hagyományos telepítéssel is, egyéni konfigurálással.
+
+Ebben az esetben a `chat-service.js` `connect` függvényben a `mongoose.connect(...)` és a `redis.createClient({...})` függvényhívásokban is át kell írni a portokat az újakra vagy a default-ra.). Ha nem változtattunk semmi alapbeállításon, akkor:
+
+```
+mongoose.connect('mongodb://' + serverAddress + ':27017/bilabor?authSource=admin', {useNewUrlParser: true, useUnifiedTopology: true})
+...
+redis.createClient({host: serverAddress, port: 6379, retry_strategy: function (){} })
+```
+
+Klónozzuk vagy töltsük le ezt a repot. 
+
+Ebben az esetben a kipróbálás során nem fogad majd üzenet a laborvezetőtől egyik chat szobában sem. (Lásd docker MongoDB inicializáló szkript `mongo-init.js`) Ha szeretnéd manuálisan hozzáadhatod ezeket parancssoros mongo kliensből, MongoDB Compass alkalmazással vagy Robo 3T alkalmazással.
+
+### 2.2. Docker alapú környezet
 
 A labor során a két adatbázist Docker konténerként fogjuk futtatni Docker Compose segítségével, így ezeknek elérhetőnek kell lenniük a környezetünkben. 
 
 Töltsük le és telepítsük a [Docker Desktop](https://www.docker.com/products/docker-desktop) alkalmazást. 
-
-(Docker helyett használható a [Redis](https://redis.io/download) és [MongoDB](https://www.mongodb.com/try/download/community) hagyományos telepítéssel is, egyéni konfigurálással.)
 
 A Docker egy konténer alapú, kis overheadű virtualizációs technológia. Segítségével Docker Image-kből Docker konténereket tudunk indítani, mely egy-egy szolgáltatást, szoftvert tartalmaznak. Néhány alapvető paranccsal termnálból menedzselhetjük ezeket.
 
@@ -211,10 +226,14 @@ Első indításkor a parancs letölti az szükséges image-ket, majd a docker-co
 Látható, hogy a a MongoDB default `27017` és a Redis default `6379` portjai vannak összekapcsolva a saját gépünkön az `57017` és `56379` portokkal. 
 (Esetleges lokális példányokkal és korábbi Docker előzményekkel való portütközések elkerülése végett. 
 Ütközés esetén a docker-compose-yml fájlban kell az `XXXX:6379` és `YYYY:27017` sorokat átírni a kívánt portra és ismét elindítani a konténert. 
-Ezesetben vagy saját Redis és MongoDb esetén a `chat-service.js` `connect` függvényben a `mongoose.connect(...)` és a `redis.createClient({...})` függvényhívásokban is át kell írni a portokat az újakra vagy a default-ra.)
 
 MongoDB-n beállításra kerülnek a root felhasználó adatai, illetve lefut egy inicializáló szkript is. 
 Redis-en beállításra kerül a jelszó. 
+
+### 2.3 Ha megvan a környezet...
+
+A függőségek (Electron, Redis és MongoDB driverek stb.) telepítésére a Node Package Manager-t fogjuk használni.
+Töltsük le és telepítsük az [NPM](https://nodejs.org/en/download/) alkalmazást.
 
 A repo mappájában a következő parancsokkal tölthetjük le a függőségeket a package.json fájl tartalma alapján:
 ```sh
@@ -222,7 +241,7 @@ npm install
 ```
 Ekkor létrejön a projekten belül a node_modules mappa, ami tartalmazza a telepített függőségeket. Tekintsük meg a package.json fájl dependencies objektumát és vessük össze a node_modules mappa tartalmával. 
 
-A package.json fájlból látható továbbá, hogy az `npm start` kiadásakor az `electron .` szkript fog lefutni, ami megjeleníti az Electron alkalmazást (a main.js alapján szerint a még nem létező chat.html-t fogja betölteni). 
+A package.json fájlból látható továbbá, hogy az `npm start` kiadásakor az `electron .` szkript fog lefutni, ami megjeleníti az Electron alkalmazást (a main.js alapján szerint a még nem létező chat.html-t fogja betölteni). Itt van beállítva a DevTools automatikus megnyitása és a node integráció támogatása is.
 
 
 ## 3. Az alkalmazás
@@ -760,6 +779,8 @@ Tehát összegezve:
 lényegtelen).
 * Lesz egy `rooms_channel` ahova akkor küldünk üzenetet, ha egy szobába új üzenet érkezik egy szobába, az üzenet
 tartalma a szoba neve.
+
+Fontos, hogy a labor során beállított redis kliens verzió a latest verzióhoz képest egy kicsit eltérő szintaxist használ. 
 
 Kezdjük az implementációt a redis kliens importálásával és az egyes csatornák neveinek rögzítésével, tegyük az alábbit 
 a `chat-service.js` fájl elejére (a mongoose import alá például):
