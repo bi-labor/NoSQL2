@@ -186,15 +186,31 @@ and presented as a thick client application. A useful addition is that the Devel
 if necessary use it for debugging.
 
 ## 2. Preparation
-We will use the Node Package Manager to install the dependencies (Electron, Redis and MongoDB drivers, etc.).
-Download and install [NPM](https://nodejs.org/en/download/).
+**This lab can be done on your own machine (Docker-based or without Docker) or on a virtual machine (without Docker)!**
+
+### 2.1. Environment without Docker
+
+You can also use [Redis](https://redis.io/download)/[Redis on Windows](https://github.com/microsoftarchive/redis/releases/tag/win-3.0.504) and [MongoDB](https://www.mongodb.com/try/download/community) instead of Docker with a traditional installation with custom configuration.
+
+In this case, the port numbers in the `chat-service.js` `connect` function have to also be rewritten to the default or the newer ones in the `mongoose.connect(...)` and `redis.createClient({...})` function calls.) If we have not changed any default settings, then:
+
+```
+mongoose.connect('mongodb://' + serverAddress + ':27017/bilabor?authSource=admin', {useNewUrlParser: true, useUnifiedTopology: true})
+...
+
+...
+redis.createClient({host: serverAddress, port: 6379, retry_strategy: function (){} })
+```
+
+Clone or download this repo. Checkout the `eng` branch.
+
+In this case, you will not receive any messages from the lab instructor in any of the chat rooms during the execution. (See docker MongoDB initialization script `mongo-init.js`) If you want, you can add them manually from the command line mongo client, with the MongoDB Compass application or the Robo 3T application.
+
+### 2.2. Docker based environment
 
 During the lab, the two databases will be run as Docker containers using Docker Compose, so they should be available in our environment.
 
 Download and install [Docker Desktop](https://www.docker.com/products/docker-desktop).
-
-(You can also use [Redis](https://redis.io/download) and [MongoDB](https://www.mongodb.com/try/download/community) 
-instead of Docker with a traditional installation with custom configuration.)
 
 Docker is a container-based, small overhead virtualization technology. 
 With its help, we can launch Docker containers from Docker Images, which contain a service or software. 
@@ -215,10 +231,14 @@ At first startup, the command downloads the required images and then initializes
 You can see that the ports of MongoDB default `27017` and Redis default `6379` are connected to the `57017` and `56379` ports on our own machine.
 (To avoid port collisions with possible local instances and previous Docker history.
 In the event of a collision, the lines `XXXX:6379` and `YYYY:27017` in the `docker-compose-yml` file have to be rewritten to the desired port and the container should be restarted.
-In this case, the port numbers in the `chat-service.js` `connect` function have to also be rewritten in the `mongoose.connect(...)` and `redis.createClient({...})` function calls.)
 
 The root user data is set on MongoDB and an initialization script is run. 
 The password is set on Redis. 
+
+### 2.3 If you have the environment...
+
+We will use the Node Package Manager to install the dependencies (Electron, Redis and MongoDB drivers, etc.).
+Download and install [NPM](https://nodejs.org/en/download/).
 
 In the repo folder, you can download the dependencies based on the contents of the package.json file with the following commands:
 ```sh
@@ -228,7 +248,7 @@ This creates the node_modules folder within the project, which contains the inst
 Look at the dependencies object in the `package.json` file and compare it with the contents of the `node_modules` folder.
 
 You can also see from the `package.json` file that when the `npm start` is released, the `electron .` script will run, 
-which will display the Electron application (based on `main.js`, it will load the `chat.html` that does not yet exist).
+which will display the Electron application (based on `main.js`, it will load the `chat.html` that does not yet exist). Automatic opening of DevTools and support for node integration are also set here.
 
 ## 3. The application
 The application we create in this lab is a simple chat program. Users can log in, chat with each other in the main room, 
@@ -762,6 +782,8 @@ So in summary:
 irrelevant).
 * There will be a `rooms_channel` where we send a message when a new message arrives in a room, the message
 contents of the room name.
+
+It is important that the redis client version used during the lab uses a slightly different syntax compared to the latest version.
 
 Let's start the implementation by importing the redis client and storing the names of each channel, do the following
 to the beginning of the `chat-service.js` file (for example, under mongoose import):
